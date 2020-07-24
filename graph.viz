@@ -1,0 +1,50 @@
+graph schema {
+        rankdir=BT;
+        size=10;
+subgraph cluster_management {
+            style=filled;
+            color="#dbcf94";
+            node [style=filled,color=white,shape=rect];
+            label="management";
+            management_Environment_v1alpha1 [ label = "Environment (v1alpha1)" ];
+subgraph cluster_management_Environment {
+            style=filled;
+            color="#ebda84";
+            node [style=filled,color=white,shape=rect];
+            label="Environment";
+        management_Environment_APIService_v1alpha1 [ label = "APIService (v1alpha1)" ];
+management_Environment_APIServiceRevision_v1alpha1 [ label = "APIServiceRevision (v1alpha1)" ];
+management_Environment_APIServiceInstance_v1alpha1 [ label = "APIServiceInstance (v1alpha1)" ];
+management_Environment_Secret_v1alpha1 [ label = "Secret (v1alpha1)" ];
+management_Environment_Webhook_v1alpha1 [ label = "Webhook (v1alpha1)" ];
+management_Environment_ConsumerInstance_v1alpha1 [ label = "ConsumerInstance (v1alpha1)" ];
+management_Environment_ConsumerSubscriptionDefinition_v1alpha1 [ label = "ConsumerSubscriptionDefinition (v1alpha1)" ];
+
+};
+        };
+subgraph cluster_definitions {
+            style=filled;
+            color="#dbcf94";
+            node [style=filled,color=white,shape=rect];
+            label="definitions";
+            definitions_ResourceGroup_v1alpha1 [ label = "ResourceGroup (v1alpha1)" ];
+subgraph cluster_definitions_ResourceGroup {
+            style=filled;
+            color="#ebda84";
+            node [style=filled,color=white,shape=rect];
+            label="ResourceGroup";
+        definitions_ResourceGroup_ResourceDefinition_v1alpha1 [ label = "ResourceDefinition (v1alpha1)" ];
+definitions_ResourceGroup_ResourceDefinitionVersion_v1alpha1 [ label = "ResourceDefinitionVersion (v1alpha1)" ];
+definitions_ResourceGroup_CommandLineInterface_v1alpha1 [ label = "CommandLineInterface (v1alpha1)" ];
+
+};
+        };
+management_Environment_APIServiceRevision_v1alpha1 -- management_Environment_APIService_v1alpha1 [label="apiService",taillabel="*",headlabel="",style="bold"];
+management_Environment_APIServiceInstance_v1alpha1 -- management_Environment_APIServiceRevision_v1alpha1 [label="apiServiceRevision",taillabel="*",headlabel="",style="bold"];
+management_Environment_Webhook_v1alpha1 -- management_Environment_Secret_v1alpha1 [label="auth.secret.name",taillabel="*",headlabel="",style="dashed"];
+management_Environment_ConsumerInstance_v1alpha1 -- management_Environment_APIServiceInstance_v1alpha1 [label="apiServiceInstance",taillabel="*",headlabel="",style="bold"];
+management_Environment_ConsumerInstance_v1alpha1 -- management_Environment_ConsumerSubscriptionDefinition_v1alpha1 [label="subscription.subscriptionDefinition",taillabel="*",headlabel="",style="dashed"];
+management_Environment_ConsumerSubscriptionDefinition_v1alpha1 -- management_Environment_Webhook_v1alpha1 [label="webhooks",taillabel="*",headlabel="*",style="dashed"];
+definitions_ResourceGroup_ResourceDefinitionVersion_v1alpha1 -- definitions_ResourceGroup_ResourceDefinition_v1alpha1 [label="resourceDefinition",taillabel="*",headlabel="",style="bold"];
+definitions_ResourceGroup_CommandLineInterface_v1alpha1 -- definitions_ResourceGroup_ResourceDefinition_v1alpha1 [label="resourceDefinition",taillabel="*",headlabel="",style="bold"];
+}
