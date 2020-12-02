@@ -7,18 +7,63 @@ subgraph cluster_management {
             node [style=filled,color=white,shape=rect];
             label="management";
             management_Environment_v1alpha1 [ label = "Environment (v1alpha1)" ];
+management_Integration_v1alpha1 [ label = "Integration (v1alpha1)" ];
+management_K8SCluster_v1alpha1 [ label = "K8SCluster (v1alpha1)" ];
+management_Mesh_v1alpha1 [ label = "Mesh (v1alpha1)" ];
 subgraph cluster_management_Environment {
             style=filled;
             color="#ebda84";
             node [style=filled,color=white,shape=rect];
             label="Environment";
-        management_Environment_APIService_v1alpha1 [ label = "APIService (v1alpha1)" ];
+        management_Environment_AWSDataplane_v1alpha1 [ label = "AWSDataplane (v1alpha1)" ];
+management_Environment_AWSDiscoveryAgent_v1alpha1 [ label = "AWSDiscoveryAgent (v1alpha1)" ];
+management_Environment_AWSTraceabilityAgent_v1alpha1 [ label = "AWSTraceabilityAgent (v1alpha1)" ];
+management_Environment_EdgeDataplane_v1alpha1 [ label = "EdgeDataplane (v1alpha1)" ];
+management_Environment_EdgeDiscoveryAgent_v1alpha1 [ label = "EdgeDiscoveryAgent (v1alpha1)" ];
+management_Environment_EdgeTraceabilityAgent_v1alpha1 [ label = "EdgeTraceabilityAgent (v1alpha1)" ];
+management_Environment_APIService_v1alpha1 [ label = "APIService (v1alpha1)" ];
 management_Environment_APIServiceRevision_v1alpha1 [ label = "APIServiceRevision (v1alpha1)" ];
 management_Environment_APIServiceInstance_v1alpha1 [ label = "APIServiceInstance (v1alpha1)" ];
-management_Environment_Secret_v1alpha1 [ label = "Secret (v1alpha1)" ];
-management_Environment_Webhook_v1alpha1 [ label = "Webhook (v1alpha1)" ];
 management_Environment_ConsumerInstance_v1alpha1 [ label = "ConsumerInstance (v1alpha1)" ];
 management_Environment_ConsumerSubscriptionDefinition_v1alpha1 [ label = "ConsumerSubscriptionDefinition (v1alpha1)" ];
+
+};subgraph cluster_management_Integration {
+            style=filled;
+            color="#ebda84";
+            node [style=filled,color=white,shape=rect];
+            label="Integration";
+        management_Integration_ResourceHook_v1alpha1 [ label = "ResourceHook (v1alpha1)" ];
+
+};subgraph cluster_management_K8SCluster {
+            style=filled;
+            color="#ebda84";
+            node [style=filled,color=white,shape=rect];
+            label="K8SCluster";
+        management_K8SCluster_K8SResource_v1alpha1 [ label = "K8SResource (v1alpha1)" ];
+management_K8SCluster_ResourceDiscovery_v1alpha1 [ label = "ResourceDiscovery (v1alpha1)" ];
+management_K8SCluster_SpecDiscovery_v1alpha1 [ label = "SpecDiscovery (v1alpha1)" ];
+management_K8SCluster_APISpec_v1alpha1 [ label = "APISpec (v1alpha1)" ];
+
+};
+        };
+subgraph cluster_core {
+            style=filled;
+            color="#dbcf94";
+            node [style=filled,color=white,shape=rect];
+            label="core";
+            subgraph cluster_core_management_Environment_management_Integration {
+            style=filled;
+            color="#ebda84";
+            node [style=filled,color=white,shape=rect];
+            label="management:Environment|management:Integration";
+        core_management_Environment_management_Integration_Webhook_v1alpha1 [ label = "Webhook (v1alpha1)" ];
+
+};subgraph cluster_core_star {
+            style=filled;
+            color="#ebda84";
+            node [style=filled,color=white,shape=rect];
+            label="*";
+        core_star_Secret_v1alpha1 [ label = "Secret (v1alpha1)" ];
 
 };
         };
@@ -39,12 +84,20 @@ definitions_ResourceGroup_CommandLineInterface_v1alpha1 [ label = "CommandLineIn
 
 };
         };
+management_Environment_AWSDiscoveryAgent_v1alpha1 -- management_Environment_AWSDataplane_v1alpha1 [label="dataplane",taillabel="*",headlabel="",style="bold"];
+management_Environment_AWSTraceabilityAgent_v1alpha1 -- management_Environment_AWSDataplane_v1alpha1 [label="dataplane",taillabel="*",headlabel="",style="bold"];
+management_Environment_EdgeDiscoveryAgent_v1alpha1 -- management_Environment_EdgeDataplane_v1alpha1 [label="dataplane",taillabel="*",headlabel="",style="bold"];
+management_Environment_EdgeTraceabilityAgent_v1alpha1 -- management_Environment_EdgeDataplane_v1alpha1 [label="dataplane",taillabel="*",headlabel="",style="bold"];
 management_Environment_APIServiceRevision_v1alpha1 -- management_Environment_APIService_v1alpha1 [label="apiService",taillabel="*",headlabel="",style="bold"];
 management_Environment_APIServiceInstance_v1alpha1 -- management_Environment_APIServiceRevision_v1alpha1 [label="apiServiceRevision",taillabel="*",headlabel="",style="bold"];
-management_Environment_Webhook_v1alpha1 -- management_Environment_Secret_v1alpha1 [label="auth.secret.name",taillabel="*",headlabel="",style="dashed"];
 management_Environment_ConsumerInstance_v1alpha1 -- management_Environment_APIServiceInstance_v1alpha1 [label="apiServiceInstance",taillabel="*",headlabel="",style="bold"];
 management_Environment_ConsumerInstance_v1alpha1 -- management_Environment_ConsumerSubscriptionDefinition_v1alpha1 [label="subscription.subscriptionDefinition",taillabel="*",headlabel="",style="dashed"];
-management_Environment_ConsumerSubscriptionDefinition_v1alpha1 -- management_Environment_Webhook_v1alpha1 [label="webhooks",taillabel="*",headlabel="*",style="dashed"];
+management_Environment_ConsumerSubscriptionDefinition_v1alpha1 -- core_management_Environment_management_Integration_Webhook_v1alpha1 [label="webhooks",taillabel="*",headlabel="*",style="dashed"];
+management_Integration_ResourceHook_v1alpha1 -- core_management_Environment_management_Integration_Webhook_v1alpha1 [label="webhooks",taillabel="*",headlabel="*",style="dashed"];
+management_K8SCluster_v1alpha1 -- management_Mesh_v1alpha1 [label="mesh",taillabel="*",headlabel="",style="bold"];
+management_K8SCluster_K8SResource_v1alpha1 -- management_K8SCluster_ResourceDiscovery_v1alpha1 [label="resourceDiscovery",taillabel="*",headlabel="",style="bold"];
+management_K8SCluster_APISpec_v1alpha1 -- management_K8SCluster_SpecDiscovery_v1alpha1 [label="specDiscoveryRef",taillabel="*",headlabel="",style="bold"];
+core_management_Environment_management_Integration_Webhook_v1alpha1 -- core_star_Secret_v1alpha1 [label="auth.secret.name",taillabel="*",headlabel="",style="dashed"];
 definitions_ResourceGroup_ResourceDefinitionVersion_v1alpha1 -- definitions_ResourceGroup_ResourceDefinition_v1alpha1 [label="resourceDefinition",taillabel="*",headlabel="",style="bold"];
 definitions_ResourceGroup_CommandLineInterface_v1alpha1 -- definitions_ResourceGroup_ResourceDefinition_v1alpha1 [label="resourceDefinition",taillabel="*",headlabel="",style="bold"];
 }

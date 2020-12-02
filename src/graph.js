@@ -23,7 +23,7 @@ function resourceKey(resource, version) {
     if (!resource.scope) {
         return `${resource.group}_${resource.kind}_${version}`;
     } else {
-        return `${resource.group}_${resource.scope}_${resource.kind}_${version}`;
+        return `${resource.group}_${safeName(resource.scope)}_${resource.kind}_${version}`;
     }
 }
 
@@ -43,7 +43,7 @@ function graphResources(group, definitions) {
     const scopes = [...new Set(definitions.filter(d => d.scope).map(d => d.scope))];
     scopes.forEach(scope => {
         const scoped = definitions.filter(d => d.scope === scope);
-        viz += `subgraph cluster_${group}_${scope} {
+        viz += `subgraph cluster_${group}_${safeName(scope)} {
             style=filled;
             color="${scopeColor}";
             node [style=filled,color=white,shape=rect];
@@ -85,7 +85,9 @@ function graph(definitions) {
                 .filter(p => p.length)
                 .forEach(p => {
                     const targetKind = jp.value(sv, p);
-                    const targetResource = definitions.filter(d => d.group === sourceDef.group && d.kind === targetKind)[0];
+                    
+                    console.log(sourceDef.group, targetKind);
+                    const targetResource = definitions.filter(d => referenceMatch(d, sourceDef.group, sourceDef.scope, targetKind))[0];
 
                     const refTypePath = [...p];
                     refTypePath.splice(p.length-1, p.length-1, 'x-amplify-kind-ref-type');
@@ -96,7 +98,6 @@ function graph(definitions) {
                     ).join('.');
 
                     const isArray = [...p].filter((fp, i) => fp === 'items').length > 0;
-
 
                     targetResource.spec.versions.forEach(tv => {
                         const target = resourceKey(targetResource, tv.name);
@@ -109,6 +110,29 @@ function graph(definitions) {
     viz += '}\n';
 
     return viz
+}
+
+function referenceMatch(resource, group, scope, kind) {
+    if (resource.kind !== kind) {
+        return false;
+    }
+
+    if (resource.group === "core" && resource.scope) {
+        for (let groupscope of resource.scope.split("|")) {
+            const gs = groupscope.split(":");
+            const g = gs.length > 1 ? gs[0] : resource.group;
+            const s = gs.length > 1 ? gs[1] : gs[0];
+            if (g === group && (s === scope || s === '*')) {
+                return true;
+            }
+        }
+    } else {
+        return resource.group === group && (resource.scope ? resource.scope === scope : !scope);
+    }
+}
+
+function safeName(name) {
+    return name.replace(/:/g, '_').replace(/\|/g, '_').replace(/\*/g, 'star');
 }
 
 module.exports = graph
