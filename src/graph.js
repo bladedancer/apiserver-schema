@@ -84,25 +84,56 @@ function graph(definitions) {
             jp.paths(sv, '$..["x-amplify-kind-ref"]')
                 .filter(p => p.length)
                 .forEach(p => {
-                    const targetKind = jp.value(sv, p);
+                    const annotation = jp.value(sv, p);
+                    let targetKind = annotation;
                     
-                    console.log(sourceDef.group, targetKind);
-                    const targetResource = definitions.filter(d => referenceMatch(d, sourceDef.group, sourceDef.scope, targetKind))[0];
+                    // split on |, 1 grp, 2, scopekind, 3 resource kind
+                    let group = sourceDef.group;
+                    let scope = sourceDef.scope;
 
-                    const refTypePath = [...p];
-                    refTypePath.splice(p.length-1, p.length-1, 'x-amplify-kind-ref-type');
-                    const isHard = jp.value(sv, refTypePath) != 'soft';
+                    for (let kind of targetKind.split("|")) {
+                        if (!kind) {
+                            continue
+                        }
+                        const parts = kind.split(":");
+                        if (parts.length == 3) {
+                            group = parts[0];
+                            scope = parts[1];
+                            targetKind = parts[2];
+                        } else if (parts.length == 2) {
+                            scope = parts[0];
+                            targetKind = parts[1];
+                        } else {
+                            targetKind = parts[0];
+                        }
                     
-                    const fieldPath = [...p].filter((fp, i) => 
-                        i > 3 && i < p.length - 1 && fp !== 'items' && fp !== 'properties'
-                    ).join('.');
+                        console.log(group, scope, targetKind);
+                        let targetResource = definitions.filter(d => referenceMatch(d, group, scope, targetKind))[0];
 
-                    const isArray = [...p].filter((fp, i) => fp === 'items').length > 0;
+                        if (!targetResource) {
+                            // Try global scope
+                            targetResource = definitions.filter(d => referenceMatch(d, group, null, targetKind))[0];
+                        }
 
-                    targetResource.spec.versions.forEach(tv => {
-                        const target = resourceKey(targetResource, tv.name);
-                        viz += `${source} -- ${target} [label="${fieldPath}",taillabel="*",headlabel="${isArray? '*' : ''}",style="${isHard? 'bold': 'dashed'}"];\n`;
-                    });
+                        if (!targetResource) {
+                            throw "Unable to find reference: " + annotation + " on " + sourceDef.kind;
+                        }
+
+                        const refTypePath = [...p];
+                        refTypePath.splice(p.length-1, p.length-1, 'x-amplify-kind-ref-type');
+                        const isHard = jp.value(sv, refTypePath) != 'soft';
+                        
+                        const fieldPath = [...p].filter((fp, i) => 
+                            i > 3 && i < p.length - 1 && fp !== 'items' && fp !== 'properties'
+                        ).join('.');
+
+                        const isArray = [...p].filter((fp, i) => fp === 'items').length > 0;
+
+                        targetResource.spec.versions.forEach(tv => {
+                            const target = resourceKey(targetResource, tv.name);
+                            viz += `${source} -- ${target} [label="${fieldPath}",taillabel="*",headlabel="${isArray? '*' : ''}",style="${isHard? 'bold': 'dashed'}"];\n`;
+                        });
+                    }
                 });
         });
     });
