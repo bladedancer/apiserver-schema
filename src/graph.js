@@ -87,7 +87,7 @@ function graph(definitions) {
                     const annotation = jp.value(sv, p);
                     let targetKind = annotation;
                     
-                    // split on |, 1 grp, 2, scopekind, 3 resource kind
+                    // split on |, 1 grp, 2, scopekind, 3 resource kind (but reverse optionality)
                     let group = sourceDef.group;
                     let scope = sourceDef.scope;
 
@@ -95,14 +95,20 @@ function graph(definitions) {
                         if (!kind) {
                             continue
                         }
-                        const parts = kind.split(":");
+                        const parts = kind.split("/");
                         if (parts.length == 3) {
                             group = parts[0];
                             scope = parts[1];
                             targetKind = parts[2];
                         } else if (parts.length == 2) {
-                            scope = parts[0];
-                            targetKind = parts[1];
+                            if (isGroupName(parts[0])) {
+                                group = parts[0];
+                                scope = undefined;
+                                targetKind = parts[1];
+                            } else {
+                                scope = parts[0];
+                                targetKind = parts[1];
+                            }
                         } else {
                             targetKind = parts[0];
                         }
@@ -150,7 +156,7 @@ function referenceMatch(resource, group, scope, kind) {
 
     if (resource.group === "core" && resource.scope) {
         for (let groupscope of resource.scope.split("|")) {
-            const gs = groupscope.split(":");
+            const gs = groupscope.split("/");
             const g = gs.length > 1 ? gs[0] : resource.group;
             const s = gs.length > 1 ? gs[1] : gs[0];
             if (g === group && (s === scope || s === '*')) {
@@ -163,7 +169,12 @@ function referenceMatch(resource, group, scope, kind) {
 }
 
 function safeName(name) {
-    return name.replace(/:/g, '_').replace(/\|/g, '_').replace(/\*/g, 'star');
+    return name.replace(/:/g, '_').replace(/\//g, '_').replace(/\|/g, '_').replace(/\*/g, 'star');
+}
+
+function isGroupName(name) {
+    leadingChar = name.charAt(0);
+    return leadingChar != leadingChar.toUpperCase();
 }
 
 module.exports = graph
