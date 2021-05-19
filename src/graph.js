@@ -60,10 +60,39 @@ function graphResources(group, definitions) {
     return viz;
 }
 
-function graph(definitions) {
+function graph(rawdefs) {
     let viz = `graph schema {
         rankdir=BT;
         size=10;\n`;
+
+
+    // Expand dynamic scopes
+    definitions = []
+    for (let def of rawdefs) {
+        if (def.group == "core" || !def.scope) {
+            // Core are rendered shared for now....looks prettier
+            // And if it's not scoped no expansion required.
+            definitions.push(def);
+            continue;
+        }
+
+        def.scope.split("|").forEach(s => {
+            let clone = JSON.parse(JSON.stringify(def));
+            // Stripping group from scope 
+            let parts = s.split("/");
+            if (parts.length > 1) {
+                parts.shift();
+            }
+            clone.scope = parts.join("/");
+            definitions.push(clone);
+        })
+        
+    }
+
+    // Log them all
+    console.log("----------------------------------");
+    definitions.forEach(d => console.log(d.group, d.scope, d.kind));
+    console.log("----------------------------------");
 
     groupNames(definitions).forEach(group => {
         viz += `subgraph cluster_${group} {
@@ -122,7 +151,8 @@ function graph(definitions) {
                         }
 
                         if (!targetResource) {
-                            throw "Unable to find reference: " + annotation + " on " + sourceDef.kind;
+                            //throw "Unable to find reference: " + annotation + " on " + sourceDef.kind;
+                            continue
                         }
 
                         const refTypePath = [...p];
@@ -154,7 +184,7 @@ function referenceMatch(resource, group, scope, kind) {
         return false;
     }
 
-    if (resource.group === "core" && resource.scope) {
+    if (resource.scope && resource.group == "core") {
         for (let groupscope of resource.scope.split("|")) {
             const gs = groupscope.split("/");
             const g = gs.length > 1 ? gs[0] : resource.group;
