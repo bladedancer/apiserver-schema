@@ -69,17 +69,24 @@ function graph(rawdefs) {
     // Expand dynamic scopes
     definitions = []
     for (let def of rawdefs) {
-        if (def.group == "core" || !def.scope) {
-            // Core are rendered shared for now....looks prettier
+        if (!def.scope) {
             // And if it's not scoped no expansion required.
             definitions.push(def);
             continue;
         }
 
-        def.scope.split("|").forEach(s => {
+        if (def.group == "core") {
+            let clone = JSON.parse(JSON.stringify(def));
+            clone.scope = clone.scope.replaceAll(" ", "");
+            // Core are rendered shared for now....looks prettier
+            definitions.push(clone);
+            continue;
+        }
+
+        def.scope.split("|").map(s => s.trim()).forEach(s => {
             let clone = JSON.parse(JSON.stringify(def));
             // Stripping group from scope 
-            let parts = s.split("/");
+            let parts = s.split("/").map(s => s.trim());
             if (parts.length > 1) {
                 parts.shift();
             }
@@ -95,7 +102,7 @@ function graph(rawdefs) {
     console.log("----------------------------------");
 
     groupNames(definitions).forEach(group => {
-        viz += `subgraph cluster_${group} {
+        viz += `\nsubgraph cluster_${group} {
             style=filled;
             color="${groupColor}";
             node [style=filled,color=white,shape=rect];
@@ -120,7 +127,7 @@ function graph(rawdefs) {
                     let group = sourceDef.group;
                     let scope = sourceDef.scope;
 
-                    for (let kind of targetKind.split("|")) {
+                    for (let kind of targetKind.split("|").map(s => s.trim())) {
                         if (!kind) {
                             continue
                         }
@@ -185,7 +192,7 @@ function referenceMatch(resource, group, scope, kind) {
     }
 
     if (resource.scope && resource.group == "core") {
-        for (let groupscope of resource.scope.split("|")) {
+        for (let groupscope of resource.scope.split("|").map(s => s.trim())) {
             const gs = groupscope.split("/");
             const g = gs.length > 1 ? gs[0] : resource.group;
             const s = gs.length > 1 ? gs[1] : gs[0];
